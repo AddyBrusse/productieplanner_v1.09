@@ -1,5 +1,6 @@
 import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 
@@ -35,6 +36,40 @@ function createWindow(): void {
   }
 }
 
+// Machines storage path
+const getMachinesFilePath = (): string => {
+  const dataDir = join(app.getPath('userData'), 'data')
+  if (!existsSync(dataDir)) {
+    mkdirSync(dataDir, { recursive: true })
+  }
+  return join(dataDir, 'machines.json')
+}
+
+// Load machines from file
+const loadMachines = (): unknown[] => {
+  try {
+    const filePath = getMachinesFilePath()
+    if (existsSync(filePath)) {
+      const data = readFileSync(filePath, 'utf-8')
+      return JSON.parse(data)
+    }
+  } catch (error) {
+    console.error('Error loading machines:', error)
+  }
+  return []
+}
+
+// Save machines to file
+const saveMachines = (machines: unknown[]): void => {
+  try {
+    const filePath = getMachinesFilePath()
+    writeFileSync(filePath, JSON.stringify(machines, null, 2), 'utf-8')
+  } catch (error) {
+    console.error('Error saving machines:', error)
+    throw error
+  }
+}
+
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
@@ -51,6 +86,16 @@ app.whenReady().then(() => {
 
   // IPC test
   ipcMain.on('ping', () => console.log('pong'))
+
+  // Machines IPC handlers
+  ipcMain.handle('machines:load', () => {
+    return loadMachines()
+  })
+
+  ipcMain.handle('machines:save', (event, machines) => {
+    saveMachines(machines)
+    return { success: true }
+  })
 
   createWindow()
 

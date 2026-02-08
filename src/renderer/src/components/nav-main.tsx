@@ -1,6 +1,7 @@
 "use client"
 
 import { ChevronRight, type LucideIcon } from "lucide-react"
+import { usePageContext } from "@/context/PageContext"
 
 import {
   Collapsible,
@@ -32,6 +33,8 @@ export function NavMain({
     }[]
   }[]
 }) {
+  const { setCurrentPage } = usePageContext()
+
   return (
     <SidebarGroup>
       <SidebarGroupLabel>Platform</SidebarGroupLabel>
@@ -45,7 +48,10 @@ export function NavMain({
           >
             <SidebarMenuItem>
               <CollapsibleTrigger asChild>
-                <SidebarMenuButton tooltip={item.title}>
+                <SidebarMenuButton
+                  tooltip={item.title}
+                  onClick={() => setCurrentPage({ title: item.title })}
+                >
                   {item.icon && <item.icon />}
                   <span>{item.title}</span>
                   <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
@@ -56,7 +62,15 @@ export function NavMain({
                   {item.items?.map((subItem) => (
                     <SidebarMenuSubItem key={subItem.title}>
                       <SidebarMenuSubButton asChild>
-                        <a href={subItem.url}>
+                        <a
+                          href={subItem.url}
+                          onClick={() =>
+                            setCurrentPage({
+                              title: subItem.title,
+                              parent: item.title,
+                            })
+                          }
+                        >
                           <span>{subItem.title}</span>
                         </a>
                       </SidebarMenuSubButton>

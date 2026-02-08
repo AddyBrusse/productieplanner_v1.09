@@ -12,6 +12,9 @@ import {
   PieChart,
   Settings2,
   SquareTerminal,
+  ChartNetwork,
+  Drill,
+  Import,
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -28,8 +31,8 @@ import {
 // This is sample data.
 const data = {
   user: {
-    name: "shadcn",
-    email: "m@example.com",
+    name: "Addy Brusse",
+    email: "addybrusse@gmail.com",
     avatar: "/avatars/shadcn.jpg",
   },
   teams: [
@@ -51,21 +54,28 @@ const data = {
   ],
   navMain: [
     {
-      title: "Playground",
+      title: "Planning",
       url: "#",
       icon: SquareTerminal,
       isActive: true,
       items: [
         {
-          title: "History",
+          title: "Overzicht",
           url: "#",
+          icon: ChartNetwork,
         },
         {
-          title: "Starred",
+          title: "Machines",
           url: "#",
+          icon: Drill,
         },
         {
-          title: "Settings",
+          title: "Importeren",
+          url: "#",
+          icon: Import,
+        },
+        {
+          title: "Instellingen",
           url: "#",
         },
       ],

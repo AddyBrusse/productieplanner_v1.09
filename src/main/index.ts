@@ -92,7 +92,7 @@ app.whenReady().then(() => {
     return loadMachines()
   })
 
-  ipcMain.handle('machines:save', (event, machines) => {
+  ipcMain.handle('machines:save', (_event, machines) => {
     saveMachines(machines)
     return { success: true }
   })

@@ -165,3 +165,67 @@ export const getTimelineWidth = (numberOfDays: number): number => {
 export const getTimelineHeight = (numberOfMachines: number): number => {
   return HEADER_HEIGHT + numberOfMachines * MACHINE_ROW_HEIGHT + 50 // 50px padding
 }
+
+/**
+ * Calculate node start time by working backwards from due date
+ * @param dueDate - When the node must be complete
+ * @param durationHours - How many hours the node takes
+ * @param operatingStartHour - When machines start operating (default 6)
+ * @param operatingEndHour - When machines stop operating (default 22)
+ * @returns Date/time when node should start
+ */
+export const calculateNodeStartTime = (
+  dueDate: Date,
+  durationHours: number,
+  operatingStartHour: number = 6,
+  operatingEndHour: number = 22
+): Date => {
+  const startTime = new Date(dueDate)
+  let remainingHours = durationHours
+  
+  // Work backwards from due date
+  while (remainingHours > 0) {
+    const currentHour = startTime.getHours()
+    
+    if (currentHour >= operatingStartHour && currentHour < operatingEndHour) {
+      // Within operating hours
+      const hoursLeftToday = operatingEndHour - currentHour
+      if (remainingHours <= hoursLeftToday) {
+        // Node completes today
+        startTime.setHours(currentHour - remainingHours)
+        remainingHours = 0
+      } else {
+        // Need more days
+        remainingHours -= hoursLeftToday
+        startTime.setDate(startTime.getDate() - 1)
+        startTime.setHours(operatingEndHour)
+      }
+    } else {
+      // Outside operating hours - move to previous operating day
+      startTime.setDate(startTime.getDate() - 1)
+      startTime.setHours(operatingEndHour)
+    }
+  }
+  
+  return startTime
+}
+
+/**
+ * Get color for a calculation ID (deterministic based on ID)
+ */
+export const getCalculationColor = (calculationId: string): string => {
+  const colors = [
+    "bg-blue-100",
+    "bg-purple-100",
+    "bg-pink-100",
+    "bg-cyan-100",
+    "bg-emerald-100",
+    "bg-amber-100",
+    "bg-rose-100",
+    "bg-indigo-100",
+  ]
+  
+  const hash = calculationId.charCodeAt(calculationId.length - 1)
+  return colors[hash % colors.length]
+}
+

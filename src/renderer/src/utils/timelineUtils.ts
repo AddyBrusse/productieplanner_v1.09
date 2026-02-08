@@ -183,27 +183,43 @@ export const calculateNodeStartTime = (
   const startTime = new Date(dueDate)
   let remainingHours = durationHours
   
-  // Work backwards from due date
+  // Set due time to end of operating hours if it's after
+  if (startTime.getHours() >= operatingEndHour) {
+    startTime.setHours(operatingEndHour, 0, 0, 0)
+  } else if (startTime.getHours() < operatingStartHour) {
+    // If before start, move to previous day's end
+    startTime.setDate(startTime.getDate() - 1)
+    startTime.setHours(operatingEndHour, 0, 0, 0)
+  }
+  
+  // Work backwards from due time
   while (remainingHours > 0) {
     const currentHour = startTime.getHours()
+    const operatingHoursPerDay = operatingEndHour - operatingStartHour
     
-    if (currentHour >= operatingStartHour && currentHour < operatingEndHour) {
+    if (currentHour > operatingStartHour) {
       // Within operating hours
-      const hoursLeftToday = operatingEndHour - currentHour
-      if (remainingHours <= hoursLeftToday) {
-        // Node completes today
+      const hoursInThisPeriod = currentHour - operatingStartHour
+      if (remainingHours <= hoursInThisPeriod) {
+        // Completes within this day
         startTime.setHours(currentHour - remainingHours)
         remainingHours = 0
       } else {
-        // Need more days
-        remainingHours -= hoursLeftToday
+        // Need previous days
+        remainingHours -= hoursInThisPeriod
         startTime.setDate(startTime.getDate() - 1)
         startTime.setHours(operatingEndHour)
       }
     } else {
-      // Outside operating hours - move to previous operating day
+      // Before operating hours - move to previous day's end
       startTime.setDate(startTime.getDate() - 1)
       startTime.setHours(operatingEndHour)
+    }
+    
+    // Safety check to prevent infinite loops
+    if (remainingHours > 100) {
+      console.warn("calculateNodeStartTime: Potential infinite loop detected")
+      break
     }
   }
   

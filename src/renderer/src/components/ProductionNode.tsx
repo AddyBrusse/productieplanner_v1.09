@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import { useState, useRef, useEffect } from "react"
 import { ProductionNode as ProductionNodeType } from "@/types/production"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
@@ -43,6 +43,7 @@ export function ProductionNodeComponent({
   const [isHovered, setIsHovered] = useState(false)
   const [isDragLocal, setIsDragLocal] = useState(false)
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 })
+  const nodeRef = useRef<HTMLDivElement>(null)
 
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsDragLocal(true)
@@ -53,17 +54,29 @@ export function ProductionNodeComponent({
     onDragStart?.(e)
   }
 
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (isDragLocal && onDragEnd) {
-      const newX = e.clientX - dragOffset.x
-      const newY = e.clientY - dragOffset.y
-      onDragEnd({ x: newX, y: newY })
-    }
-  }
+  useEffect(() => {
+    if (!isDragLocal) return
 
-  const handleMouseUp = () => {
-    setIsDragLocal(false)
-  }
+    const handleMouseMove = (e: MouseEvent) => {
+      if (onDragEnd) {
+        const newX = e.clientX - dragOffset.x
+        const newY = e.clientY - dragOffset.y
+        onDragEnd({ x: newX, y: newY })
+      }
+    }
+
+    const handleMouseUp = () => {
+      setIsDragLocal(false)
+    }
+
+    document.addEventListener("mousemove", handleMouseMove)
+    document.addEventListener("mouseup", handleMouseUp)
+
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove)
+      document.removeEventListener("mouseup", handleMouseUp)
+    }
+  }, [isDragLocal, dragOffset, onDragEnd])
 
   const colorKey = Object.keys(calculationColors).find((key) =>
     node.calculationId.includes(key)
@@ -71,6 +84,7 @@ export function ProductionNodeComponent({
 
   return (
     <div
+      ref={nodeRef}
       className={cn(
         "absolute rounded-md border-2 p-2 cursor-move transition-all",
         calculationColors[colorKey],
@@ -84,8 +98,6 @@ export function ProductionNodeComponent({
         minHeight: "80px",
       }}
       onMouseDown={handleMouseDown}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >

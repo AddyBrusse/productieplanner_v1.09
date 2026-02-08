@@ -1,9 +1,16 @@
 "use client"
 
 import { useState } from "react"
+import type { ZoomLevel } from "@/utils/viewModifiers"
+import {
+  getViewStartDate,
+  getViewEndDate,
+  ZOOM_CONFIGS,
+} from "@/utils/viewModifiers"
 import { useMachines } from "@/context/MachinesContext"
 import { useProductionData } from "@/context/ProductionDataContext"
 import { ProductionNodeComponent } from "@/components/ProductionNode"
+import { TimelineControls } from "@/components/TimelineControls"
 import {
   getTimelineDays,
   getDayTimeSlots,
@@ -29,16 +36,21 @@ export function TimelineLayout({ numberOfDays = 30, startDate = new Date() }: Ti
   const { nodes, updateNodePosition } = useProductionData()
   const { machines: configuredMachines } = useMachines()
   const [draggedNodeId, setDraggedNodeId] = useState<string | null>(null)
+  const [zoomLevel, setZoomLevel] = useState<ZoomLevel>('week')
+  const [viewStartDate, setViewStartDate] = useState(() => getViewStartDate(startDate, 'week'))
+
+  // Calculate view end date based on zoom level
+  const displayDays = ZOOM_CONFIGS[zoomLevel].days
 
   // Get timeline parameters
-  const timelineDays = getTimelineDays(startDate, numberOfDays)
+  const timelineDays = getTimelineDays(viewStartDate, displayDays)
   const timeSlots = getDayTimeSlots()
   const uniqueMachines = getUniqueMachines(nodes)
 
   // Calculate dimensions - EXACT
   const slotsPerDay = timeSlots.length // 8
   const dayWidth = slotsPerDay * PIXELS_PER_SLOT // 800px
-  const totalWidth = numberOfDays * dayWidth // Perfect alignment
+  const totalWidth = displayDays * dayWidth // Perfect alignment
   const totalHeight = HEADER_HEIGHT + uniqueMachines.length * MACHINE_ROW_HEIGHT + 100
 
   // Calculate node positions
@@ -117,8 +129,8 @@ export function TimelineLayout({ numberOfDays = 30, startDate = new Date() }: Ti
   }
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="space-y-2">
+    <div className="flex flex-col h-full gap-0">
+      <div className="space-y-2 px-6 pt-6 pb-2">
         <h1 className="text-2xl font-semibold tracking-tight text-foreground">
           Production Timeline
         </h1>
@@ -127,22 +139,32 @@ export function TimelineLayout({ numberOfDays = 30, startDate = new Date() }: Ti
         </p>
       </div>
 
+      {/* Timeline Controls */}
+      <TimelineControls
+        currentStartDate={viewStartDate}
+        zoomLevel={zoomLevel}
+        onDateChange={setViewStartDate}
+        onZoomChange={(zoom) => {
+          setZoomLevel(zoom)
+          setViewStartDate(getViewStartDate(viewStartDate, zoom))
+        }}
+      />
+
       {/* Timeline Container */}
-      <div className="rounded-lg border bg-card overflow-auto">
+      <div className="flex-1 rounded-lg border bg-card overflow-auto">
         <div
           className="relative bg-white"
           style={{
             width: `${totalWidth}px`,
             height: `${totalHeight}px`,
-            minWidth: "100%",
           }}
         >
           {/* Day Headers - EXACT ALIGNMENT */}
           <div className="flex bg-muted border-b sticky top-0 z-40">
             <div
-              className="shrink-0 border-r w-32 flex items-center justify-center font-medium text-sm text-foreground/70 sticky left-0 z+100 bg-muted"
+              className="shrink-0 border-r w-32 flex items-center justify-center font-medium text-sm text-foreground/70 sticky left-0 z-50 bg-muted"
               style={{ height: HEADER_HEIGHT, width: 128 }}
-              >
+            >
               Machines
             </div>
             {timelineDays.map((day, dayIndex) => (
@@ -324,10 +346,18 @@ export function TimelineLayout({ numberOfDays = 30, startDate = new Date() }: Ti
         </div>
       </div>
 
-      <div className="text-xs text-foreground/50">
-        <p>Timeline dimensions: {totalWidth}px × {totalHeight}px</p>
-        <p>Day width: {dayWidth}px | Slot width: {PIXELS_PER_SLOT}px | Slots per day: {slotsPerDay}</p>
-        <p>Nodes positioned: {nodes.length} | Connections: {nodePositions.filter((p) => nodes.some((n) => n.calculationId === p.calculationId && nodes.filter((nn) => nn.calculationId === p.calculationId).length > 1)).length}</p>
+      <div className="border-t bg-card px-6 py-3 text-xs text-foreground/50 space-y-1">
+        <p>
+          <span className="font-medium">View:</span> {zoomLevel === 'day' ? 'Dag' : zoomLevel === 'week' ? 'Week' : 'Maand'} ({displayDays} dagen)
+          | <span className="font-medium">Dimensions:</span> {totalWidth}px × {totalHeight}px
+        </p>
+        <p>
+          <span className="font-medium">Grid:</span> {timelineDays.length} days, {timeSlots.length} time slots/day, {uniqueMachines.length} machines
+          | Day width: {dayWidth}px | Slot width: {PIXELS_PER_SLOT}px
+        </p>
+        <p>
+          <span className="font-medium">Nodes:</span> {nodes.length} total | {nodePositions.length} positioned
+        </p>
       </div>
     </div>
   )

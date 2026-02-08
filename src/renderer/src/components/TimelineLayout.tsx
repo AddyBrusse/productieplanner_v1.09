@@ -13,12 +13,12 @@ import {
   getYPositionForMachine,
   getXPositionForDateTime,
   getWidthForDuration,
-  calculateNodeStartTime,
   PIXELS_PER_SLOT,
   MACHINE_ROW_HEIGHT,
   HEADER_HEIGHT,
   SLOT_HEIGHT,
 } from "@/utils/timelineUtils"
+import { scheduleNode } from "@/utils/productionScheduler"
 
 interface TimelineProps {
   numberOfDays?: number
@@ -43,7 +43,7 @@ export function TimelineLayout({ numberOfDays = 30, startDate = new Date() }: Ti
 
   // Calculate node positions
   const nodePositions = nodes.map((node) => {
-    const startTime = calculateNodeStartTime(node.dueDate, node.hours)
+    const startTime = scheduleNode(node)
     const xPos = getXPositionForDateTime(startTime, timelineDays[0], startTime.getHours()) + 128 // 128px for row header
     const machineIndex = getMachineIndex(node.machineId, uniqueMachines)
     const yPos = getYPositionForMachine(machineIndex) + HEADER_HEIGHT + SLOT_HEIGHT

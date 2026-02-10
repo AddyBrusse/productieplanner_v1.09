@@ -10,7 +10,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { nodeStatusColors } from "@/types/production"
 
 export function PlanningOverview() {
   const { nodes } = useProductionData()
@@ -89,7 +88,6 @@ export function PlanningOverview() {
                 <TableCell className="text-sm px-6 py-4">
                   <Badge
                     style={{
-                      backgroundColor: nodeStatusColors[node.status],
                       color: "white",
                     }}
                   >

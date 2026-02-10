@@ -29,7 +29,6 @@ export function NavMain({
     isActive?: boolean
     items?: {
       title: string
-      url: string
     }[]
   }[]
 }) {
@@ -63,7 +62,6 @@ export function NavMain({
                     <SidebarMenuSubItem key={subItem.title}>
                       <SidebarMenuSubButton asChild>
                         <a
-                          href={subItem.url}
                           onClick={() =>
                             setCurrentPage({
                               title: subItem.title,

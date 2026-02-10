@@ -2,9 +2,10 @@ import { PageProvider, usePageContext } from "@/context/PageContext"
 import { MachinesProvider } from "@/context/MachinesContext"
 import { ProductionDataProvider } from "@/context/ProductionDataContext"
 import { AppSidebar } from "@/components/app-sidebar"
-import { PlanningSettings } from "@/components/PlanningSettings"
+import { PlanningDashboardView } from "@renderer/components/PlanningDashboardView"
 import { PlanningOverview } from "@/components/PlanningOverview"
-import { TimelineLayout } from "@/components/TimelineLayout"
+import { PlanningSettings } from "@/components/PlanningSettings"
+import { PlanningDetailView } from "@/components/PlanningDetailView"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -24,16 +25,24 @@ function PageContent() {
   const { currentPage } = usePageContext()
 
   const renderContent = () => {
-    if (currentPage.parent === "Planning" && currentPage.title === "Instellingen") {
-      return <PlanningSettings />
+    console.log("Current page:", currentPage)
+    if (currentPage.title === "Planning" && !currentPage.parent) {
+      return <PlanningDashboardView />
+    }
+    if (currentPage.parent === "Planning" && currentPage.title === "Detailplanning") {
+      return <PlanningDetailView />
     }
 
-    if (currentPage.parent === "Planning" && currentPage.title === "Overzicht") {
+    if (currentPage.parent === "Planning" && currentPage.title === "Orderoverzicht") {
       return <PlanningOverview />
     }
 
     if (currentPage.parent === "Planning" && currentPage.title === "Machines") {
-      return <TimelineLayout numberOfDays={30} startDate={new Date()} />
+      return null
+    }
+
+    if (currentPage.parent === "Planning" && currentPage.title === "Instellingen") {
+      return <PlanningSettings />
     }
 
     return (
@@ -43,14 +52,14 @@ function PageContent() {
           <div className="bg-muted/50 aspect-video rounded-xl" />
           <div className="bg-muted/50 aspect-video rounded-xl" />
         </div>
-        <div className="bg-muted/50 min-h-[100vh] flex-1 rounded-xl md:min-h-min" />
+        <div className="bg-muted/50 min-h-screen flex-1 rounded-xl md:min-h-min" />
       </div>
     )
   }
 
   return (
     <SidebarInset className="flex flex-col">
-      <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-2 border-b bg-background px-4">
+      <header className="sticky top-0 z-50 flex h-16 shrink-0 items-center gap-2 border-b bg-background px-4">
         <SidebarTrigger className="-ml-1" />
         <Separator orientation="vertical" className="mr-2 h-4" />
         <Breadcrumb>
@@ -71,7 +80,7 @@ function PageContent() {
           </BreadcrumbList>
         </Breadcrumb>
       </header>
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1 overflow-hidden bg-blue-500">
         {renderContent()}
       </div>
     </SidebarInset>
